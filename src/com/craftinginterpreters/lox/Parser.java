@@ -10,6 +10,7 @@ class Parser {
 
   private final List<Token> tokens;
   private int current = 0;
+  private int blockDepth = 0;
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
@@ -32,18 +33,41 @@ class Parser {
       return statement();
     } catch (ParseError error) {
       synchronize();
+      // System.out.printf("Sync point: %s on line %d\n", peek(), peek().line);
       return null;
     }
   }
   private Stmt statement() {
     if (match(PRINT)) return printStatement();
-    if (match(LEFT_BRACE)) return new Stmt.Block(block());
+    // LEFT_BRACE EOL* statement* RIGHT_BRACE stmt_terminator
+    if (match(LEFT_BRACE)) {
+      blockDepth++;
+      while (match(EOL)) {}
+      return new Stmt.Block(block());
+    }
 
     return expressionStatement();
   }
+  private List<Stmt> block() {
+    List<Stmt> statements = new ArrayList<>();
+
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      Stmt statement = declaration();
+      // if statement is null, it means a parse error was raised and the statement is not valid, 
+      //  skip adding this statement to the block. it will be reported as a parse error
+      if (statement != null) { 
+        statements.add(statement);
+      }
+    }
+
+    consume(RIGHT_BRACE, "Expect '}' after block.");
+    consumeStmtTerminator("Expect statement terminator after block.");
+    blockDepth--;
+    return statements;
+  }
   private Stmt printStatement() {
     Expr value = expression();
-    consume(SEMICOLON, "Expect ';' after value.");
+    consumeStmtTerminator("Expect ';' or EOL after value.");
     return new Stmt.Print(value);
   }
   private Stmt varDeclaration() {
@@ -54,23 +78,41 @@ class Parser {
       initializer = expression();
     }
 
-    consume(SEMICOLON, "Expect ';' after variable declaration.");
+    consumeStmtTerminator("Expect ';' or EOL after variable declaration.");
     return new Stmt.Var(name, initializer);
   }
   private Stmt expressionStatement() {
     Expr expr = expression();
-    consume(SEMICOLON, "Expect ';' after expression.");
+    consumeStmtTerminator("Expect ';' or EOL after expression.");
     return new Stmt.Expression(expr);
   }
-  private List<Stmt> block() {
-    List<Stmt> statements = new ArrayList<>();
-
-    while (!check(RIGHT_BRACE) && !isAtEnd()) {
-      statements.add(declaration());
+  private boolean matchStmtTerminator() {
+    // stmt_terminator -> (EOF|EOL*|SEMICOLON (EOF?|EOL*))
+    if (isAtEnd()) return true;
+    if (match(EOL)) {
+      while (match(EOL)) {}
+      return true;
     }
 
-    consume(RIGHT_BRACE, "Expect '}' after block.");
-    return statements;
+    // SEMICOLON (EOF?|EOL*)
+    if (match(SEMICOLON)) {
+      if (isAtEnd()) {
+        return true;
+      } else if (peek().type == EOL) {
+        while (match(EOL)) {}
+        return true;
+      }
+      return true;
+    }
+
+    // if we are in a block, a right brace is a valid statement terminator
+    if (check(RIGHT_BRACE) && blockDepth > 0) return true;
+
+    return false;
+  }
+  private void consumeStmtTerminator(String message) {
+    if (matchStmtTerminator()) return;
+    throw error(peek(), message);
   }
   private Expr assignment() {
     Expr expr = equality();
@@ -202,11 +244,13 @@ class Parser {
     return new ParseError();
   }
   private void synchronize() {
+    // for case like 2+;1+2 we should synchronize to token "1" and resume parsing from there
+    if (matchStmtTerminator()) return;
+
+    // for case 1+2 3*8; 4+5; Sync to "4" and resume parsing from there
     advance();
 
     while (!isAtEnd()) {
-      if (previous().type == SEMICOLON) return;
-
       switch (peek().type) {
         case CLASS:
         case FUN:
@@ -219,6 +263,7 @@ class Parser {
           return;
       }
 
+      if (matchStmtTerminator()) return;
       advance();
     }
   }

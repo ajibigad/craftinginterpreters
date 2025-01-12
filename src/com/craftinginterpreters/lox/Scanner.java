@@ -77,6 +77,10 @@ class Scanner {
         if (match('/')) {
           // A comment goes until the end of the line.
           while (peek() != '\n' && !isAtEnd()) advance();
+          if (peek() == '\n') {
+            advance();
+            line++;
+          }
         } else {
           addToken(SLASH);
         }
@@ -89,6 +93,7 @@ class Scanner {
         break;
 
       case '\n':
+        addToken(EOL);
         line++;
         break;
 
