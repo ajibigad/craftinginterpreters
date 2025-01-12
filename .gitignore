@@ -1,0 +1,63 @@
+# Ignore class files
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~ 
+.DS_Store
+
+# Build directories
+/build/
+/out/
+/target/
+
+# Maven dependencies
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+**/mvnw
+**/mvnw.cmd
+**/.mvn
+
+# Gradle dependencies
+.gradle/
+/build/
+!gradle-wrapper.jar
+
+# Eclipse IDE
+.project
+.classpath
+.settings/
+
+# IntelliJ IDEA
+*.iml
+.idea/
+*.ipr
+*.iws
+
+# NetBeans
+nbproject/
+build/
+dist/
+
+# VS Code
+.vscode/
+
+# OS-generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Files created by JetBrains IDEs
+.idea/
+*.iml
+*.iws
