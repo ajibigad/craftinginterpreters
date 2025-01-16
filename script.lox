@@ -1,3 +1,8 @@
+var a = 1;
+{
+    var a = a + 2;
+    print a;
+}
 // 1 + 2 3 - 9;
 var b = 3 > 4;
 var a = 3*4+5;
@@ -13,14 +18,14 @@ print 3-9
 {var c = 3;}
 {var c = 8; c = 23; print c;}
 {var c = 18}
-c}
+//c}
 {
     var c = 3}
-print c+2 4+5;}
-{
-    var d = 9
-    print c;
-    print c+2 4+5;}
+//print c+2 4+5;}
+//{
+//    var d = 9
+//    print c;
+//    print c+2 4+5;}
 
 print a;
 print b;
