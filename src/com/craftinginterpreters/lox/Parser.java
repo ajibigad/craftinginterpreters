@@ -11,6 +11,7 @@ class Parser {
 
   private final List<Token> tokens;
   private int current = 0;
+  private int loopDepth = 0;
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
@@ -37,13 +38,36 @@ class Parser {
     }
   }
   private Stmt statement() {
-    if (match(FOR)) return forStatement();
+    if (match(CONTINUE)) return continueStatement();
+    if (match(BREAK)) return breakStatement();
+    try {
+      loopDepth++;
+      if (match(FOR)) return forStatement();
+      if (match(WHILE)) return whileStatement();
+    } finally {
+      loopDepth--;
+    }
     if (match(IF)) return ifStatement();
     if (match(PRINT)) return printStatement();
-    if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
 
     return expressionStatement();
+  }
+  private Stmt breakStatement() {
+    if (loopDepth == 0){
+      error(previous(), "'break' can only be used inside a loop.");
+    }
+    Token token = previous();
+    consume(SEMICOLON, "Expect ';' after value.");
+    return new Stmt.Break(token);
+  }
+  private Stmt continueStatement() {
+    if (loopDepth == 0){
+      error(previous(), "'continue' can only be used inside a loop.");
+    }
+    Token token = previous();
+    consume(SEMICOLON, "Expect ';' after value.");
+    return new Stmt.Continue(token);
   }
   private Stmt forStatement() {
     consume(LEFT_PAREN, "Expect '(' after 'for'.");
@@ -78,7 +102,7 @@ class Parser {
     }
 
     if (condition == null) condition = new Expr.Literal(true);
-    body = new Stmt.While(condition, body);
+    body = new Stmt.While(condition, body, increment);
 
     if (initializer != null) {
       body = new Stmt.Block(Arrays.asList(initializer, body));
@@ -202,7 +226,7 @@ class Parser {
   private Expr term() {
     Expr expr = factor();
 
-    while (match(MINUS, PLUS)) {
+    while (match(MINUS, PLUS, MODULO)) {
       Token operator = previous();
       Expr right = factor();
       expr = new Expr.Binary(expr, operator, right);

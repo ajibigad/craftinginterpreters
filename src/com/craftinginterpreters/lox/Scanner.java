@@ -28,6 +28,8 @@ class Scanner {
     keywords.put("true",   TRUE);
     keywords.put("var",    VAR);
     keywords.put("while",  WHILE);
+    keywords.put("break",  BREAK);
+    keywords.put("continue",  CONTINUE);
   }
   private final String source;
   private final List<Token> tokens = new ArrayList<>();
@@ -59,6 +61,7 @@ class Scanner {
       case '.': addToken(DOT); break;
       case '-': addToken(MINUS); break;
       case '+': addToken(PLUS); break;
+      case '%': addToken(MODULO); break;
       case ';': addToken(SEMICOLON); break;
       case '*': addToken(STAR); break; // [slash]
       case '!':

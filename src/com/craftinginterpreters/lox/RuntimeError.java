@@ -8,3 +8,6 @@ class RuntimeError extends RuntimeException {
     this.token = token;
   }
 }
+
+class BreakException extends RuntimeException {}
+class ContinueException extends RuntimeException {}

@@ -72,9 +72,26 @@ class Interpreter implements Expr.Visitor<Object>,
   @Override
   public Void visitWhileStmt(Stmt.While stmt) {
     while (isTruthy(evaluate(stmt.condition))) {
-      execute(stmt.body);
+      try {
+        execute(stmt.body);
+      } catch (BreakException e) {
+        break;
+      } catch (ContinueException e) {
+        if (stmt.increment != null) {
+          evaluate(stmt.increment);
+        }
+        continue;
+      }
     }
     return null;
+  }
+  @Override 
+  public Void visitBreakStmt(Stmt.Break stmt) {
+    throw new BreakException();
+  }
+  @Override 
+  public Void visitContinueStmt(Stmt.Continue stmt) {
+    throw new ContinueException();
   }
   @Override
   public Object visitAssignExpr(Expr.Assign expr) {
@@ -114,6 +131,10 @@ class Interpreter implements Expr.Visitor<Object>,
           return (String)left + (String)right;
         }
 
+        if (left instanceof String || right instanceof String) {
+          return stringify(left) + stringify(right);
+        }
+
         throw new RuntimeError(expr.operator,
             "Operands must be two numbers or two strings.");
       case SLASH:
@@ -122,6 +143,9 @@ class Interpreter implements Expr.Visitor<Object>,
       case STAR:
         checkNumberOperands(expr.operator, left, right);
         return (double)left * (double)right;
+      case MODULO:
+        checkNumberOperands(expr.operator, left, right);
+        return (double)left % (double)right;
     }
 
     // Unreachable.
