@@ -28,7 +28,7 @@ class Parser {
   }
   private Stmt declaration() {
     try {
-      if (match(FUN)) return function("function");
+      if (check(FUN) && !checkAhead(LEFT_PAREN) && match(FUN)) return function("function");
       if (match(VAR)) return varDeclaration();
 
       return statement();
@@ -143,17 +143,7 @@ class Parser {
   private Stmt.Function function(String kind) {
     Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
     consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
-    List<Token> parameters = new ArrayList<>();
-    if (!check(RIGHT_PAREN)) {
-      do {
-        if (parameters.size() >= 255) {
-          error(peek(), "Can't have more than 255 parameters.");
-        }
-
-        parameters.add(
-            consume(IDENTIFIER, "Expect parameter name."));
-      } while (match(COMMA));
-    }
+    List<Token> parameters = parameters();
     consume(RIGHT_PAREN, "Expect ')' after parameters.");
 
     consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
@@ -259,8 +249,35 @@ class Parser {
       Expr right = unary();
       return new Expr.Unary(operator, right);
     }
+    if (match(FUN)) {
+      return funExpr();
+    }
 
     return call();
+  }
+  private List<Token> parameters() {
+    List<Token> parameters = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "Can't have more than 255 parameters.");
+        }
+
+        parameters.add(
+            consume(IDENTIFIER, "Expect parameter name."));
+      } while (match(COMMA));
+    }
+    return parameters;
+  }
+  private Expr funExpr() {
+    consume(LEFT_PAREN, "Expect '(' after fun keyword.");
+    List<Token> parameters = parameters();
+    
+    consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+    consume(LEFT_BRACE, "Expect '{' before function body.");
+    List<Stmt> body = block();
+    return new Expr.Function(parameters, body);
   }
   private Expr finishCall(Expr callee) {
     List<Expr> arguments = new ArrayList<>();
@@ -331,6 +348,10 @@ class Parser {
     if (isAtEnd()) return false;
     return peek().type == type;
   }
+  private boolean checkAhead(TokenType type) {
+    if (isAtEnd()) return false;
+    return peekAhead().type == type;
+  }
   private Token advance() {
     if (!isAtEnd()) current++;
     return previous();
@@ -341,6 +362,9 @@ class Parser {
 
   private Token peek() {
     return tokens.get(current);
+  }
+  private Token peekAhead() {
+    return tokens.get(current + 1);
   }
 
   private Token previous() {

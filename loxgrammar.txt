@@ -41,7 +41,10 @@ comparison  → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term        → factor ( ( "-" | "+" ) factor )* ;
 factor      → unary ( ( "/" | "*" ) unary )* ;
 unary       → ( "!" | "-" ) unary
+            | funExpr
             | call ;
+
+funExpr     → "fun" "(" parameters? ")" block ;
 
 call        → primary ( "(" arguments? ")" )* ;
 arguments   → expression ( "," expression )* ;

@@ -13,6 +13,7 @@ abstract class Expr {
     R visitLogicalExpr(Logical expr);
     R visitUnaryExpr(Unary expr);
     R visitVariableExpr(Variable expr);
+    R visitFunctionExpr(Function expr);
   }
 
   // Nested Expr classes here...
@@ -144,6 +145,36 @@ abstract class Expr {
     final Token name;
   }
 //< expr-variable
+
+  static class Function extends Expr implements LoxFunctionDeclaration {
+    Function( List<Token> params, List<Stmt> body) {
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitFunctionExpr(this);
+    }
+
+    final List<Token> params;
+    final List<Stmt> body;
+
+    @Override
+    public String name() {
+      return "() -> {}";
+    }
+
+    @Override
+    public List<Token> params() {
+      return params;
+    }
+
+    @Override
+    public List<Stmt> body() {
+      return body;
+    }
+  }
 
   abstract <R> R accept(Visitor<R> visitor);
 }

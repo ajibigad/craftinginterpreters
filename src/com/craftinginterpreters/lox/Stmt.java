@@ -45,7 +45,7 @@ abstract class Stmt {
   }
 //< stmt-expression
 //> stmt-function
-  static class Function extends Stmt {
+  static class Function extends Stmt implements LoxFunctionDeclaration {
     Function(Token name, List<Token> params, List<Stmt> body) {
       this.name = name;
       this.params = params;
@@ -60,6 +60,21 @@ abstract class Stmt {
     final Token name;
     final List<Token> params;
     final List<Stmt> body;
+
+    @Override
+    public String name() {
+      return name.lexeme;
+    }
+
+    @Override
+    public List<Token> params() {
+      return params;
+    }
+
+    @Override
+    public List<Stmt> body() {
+      return body;
+    }
   }
 //< stmt-function
 //> stmt-if

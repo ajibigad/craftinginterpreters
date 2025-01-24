@@ -220,6 +220,10 @@ class Interpreter implements Expr.Visitor<Object>,
   public Object visitVariableExpr(Expr.Variable expr) {
     return environment.get(expr.name);
   }
+  @Override
+  public Object visitFunctionExpr(Expr.Function expr) {
+    return new LoxFunction(expr, environment);
+  }
   private void checkNumberOperand(Token operator, Object operand) {
     if (operand instanceof Double) return;
     throw new RuntimeError(operator, "Operand must be a number.");

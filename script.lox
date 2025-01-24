@@ -1,10 +1,28 @@
-fun hello() {
-  print "Hello, World!";
-}
-
-hello();
 fun hi() {}
 var a = hi;
 print a;
 print a();
-return;
+
+var anonymous = fun (name) {print "Hello " + name; return name;};
+print anonymous;
+print anonymous("Dami");
+
+fun (){};
+print fun (){};
+
+print (fun (){return "hello";})();
+
+var n = "Eke";
+fun hello(fn) {
+  print fn("Hello, World!");
+}
+hello(fun (n) {return n;});
+
+fun helloClosure(message) {
+  return fun (recipient) {
+    return message + " " + recipient;
+  };
+}
+
+print helloClosure("Hello")("Steph Curry!");
+//return;
